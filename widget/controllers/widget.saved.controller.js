@@ -15,6 +15,21 @@
           limit: PAGINATION.itemCount
         };
 
+        var breadCrumbFlag = true;
+
+        Buildfire.history.get('pluginBreadcrumbsOnly', function (err, result) {
+          if(result && result.length) {
+            result.forEach(function(breadCrumb) {
+              if(breadCrumb.label == 'Saved') {
+                breadCrumbFlag = false;
+              }
+            });
+          }
+          if(breadCrumbFlag) {
+            Buildfire.history.push('Saved', { elementToShow: 'Saved' });
+          }
+        });
+
         //Refresh list of saved items on pulling the tile bar
 
         buildfire.datastore.onRefresh(function () {
@@ -32,17 +47,17 @@
         WidgetSaved.init = function (cb) {
           Buildfire.spinner.show();
           var success = function (result) {
-              Buildfire.spinner.hide();
-              if (result && result.data) {
-                WidgetSaved.data = result.data;
-              }
-            cb();
+            Buildfire.spinner.hide();
+            if (result && result.data) {
+              WidgetSaved.data = result.data;
             }
-            , error = function (err) {
-              Buildfire.spinner.hide();
-              console.error('Error while getting data', err);
             cb();
-            };
+          }
+            , error = function (err) {
+            Buildfire.spinner.hide();
+            console.error('Error while getting data', err);
+            cb();
+          };
           DataStore.get(TAG_NAMES.COUPON_INFO).then(success, error);
         };
 
@@ -126,7 +141,13 @@
         };
 
         WidgetSaved.showListItems = function () {
-          ViewStack.popAllViews()
+          ViewStack.popAllViews();
+          buildfire.history.get({},function(err,data){
+            for(var i = 0; i<data.length-1; i++){
+              Buildfire.history.pop();
+
+            }
+          })
         };
 
         WidgetSaved.showMapView = function () {

@@ -57,7 +57,7 @@
 
         buildfire.datastore.onRefresh(function () {
           WidgetMap.init(function(err){
-              console.log(">>>>>>Refreshed map");
+            console.log(">>>>>>Refreshed map");
           });
         });
 
@@ -87,7 +87,7 @@
                 WidgetMap.getSavedItems();
               else
                 WidgetMap.formatItems();
-                WidgetMap.refreshData += 1;
+              WidgetMap.refreshData += 1;
             },
             errorAll = function (error) {
               Buildfire.spinner.hide();
@@ -196,15 +196,37 @@
         WidgetMap.showListItems = function () {
           WidgetMap.isFilterApplied = false;
           console.log("============", WidgetMap.data.design.itemListLayout);
-          if (WidgetMap.data.settings.defaultView == 'list')
+          if (WidgetMap.data.settings.defaultView == 'list') {
             ViewStack.popAllViews();
-          else
+            buildfire.history.get({},function(err,data){
+              for(var i = 0; i<data.length-1; i++){
+                Buildfire.history.pop();
+
+              }
+            })
+          }
+          else {
             ViewStack.push({
               template: WidgetMap.data.design.itemListLayout,
               params: {
                 controller: "WidgetHomeCtrl as WidgetHome"
               }
             });
+            var breadCrumbFlag = true;
+
+            Buildfire.history.get('pluginBreadcrumbsOnly', function (err, result) {
+              if(result && result.length) {
+                result.forEach(function(breadCrumb) {
+                  if(breadCrumb.label == 'List') {
+                    breadCrumbFlag = false;
+                  }
+                });
+              }
+              if(breadCrumbFlag) {
+                Buildfire.history.push('List', { elementToShow: 'List' });
+              }
+            });
+          }
         };
 
         WidgetMap.formatItems = function () {
@@ -473,16 +495,16 @@
                   _items[_ind].data.distance = (result.rows[0].elements[_ind].status != 'OK') ? -1 : result.rows[0].elements[_ind].distance.value;
 
                   if (WidgetMap.isFilterApplied && WidgetMap.filter.distanceRange) {
-                      var itemDistNo = result.rows[0].elements[_ind] && result.rows[0].elements[_ind].distance && result.rows[0].elements[_ind].distance.text && Number(result.rows[0].elements[_ind].distance.text.split(' ')[0].replace(/,/g,''));
-                      var distanceUnit = result.rows[0].elements[_ind] && result.rows[0].elements[_ind].distance && result.rows[0].elements[_ind].distance.text && result.rows[0].elements[_ind].distance.text.split(' ')[1];
-                      var filterDistMin = WidgetMap.filter.distanceRange.min;
-                      var filterDistMax = WidgetMap.filter.distanceRange.max;
-                      var sortFilterCond;
-                      if ((distanceUnit == 'km' && filterDistMax > 483) || (distanceUnit == 'mi' && filterDistMax > 300))
-                          sortFilterCond = (itemDistNo >= filterDistMin);
-                      else
-                          sortFilterCond = (itemDistNo >= filterDistMin && itemDistNo <= filterDistMax);
-                   // var sortFilterCond = (Number(_items[_ind].data.distance) >= WidgetMap.filter.distanceRange.min && Number(_items[_ind].data.distance) <= WidgetMap.filter.distanceRange.max);
+                    var itemDistNo = result.rows[0].elements[_ind] && result.rows[0].elements[_ind].distance && result.rows[0].elements[_ind].distance.text && Number(result.rows[0].elements[_ind].distance.text.split(' ')[0].replace(/,/g,''));
+                    var distanceUnit = result.rows[0].elements[_ind] && result.rows[0].elements[_ind].distance && result.rows[0].elements[_ind].distance.text && result.rows[0].elements[_ind].distance.text.split(' ')[1];
+                    var filterDistMin = WidgetMap.filter.distanceRange.min;
+                    var filterDistMax = WidgetMap.filter.distanceRange.max;
+                    var sortFilterCond;
+                    if ((distanceUnit == 'km' && filterDistMax > 483) || (distanceUnit == 'mi' && filterDistMax > 300))
+                      sortFilterCond = (itemDistNo >= filterDistMin);
+                    else
+                      sortFilterCond = (itemDistNo >= filterDistMin && itemDistNo <= filterDistMax);
+                    // var sortFilterCond = (Number(_items[_ind].data.distance) >= WidgetMap.filter.distanceRange.min && Number(_items[_ind].data.distance) <= WidgetMap.filter.distanceRange.max);
                     if (!sortFilterCond) {
                       deleteItemArrayIndex.push(_ind);
                     }
@@ -494,7 +516,7 @@
 
                 }
               }
-                WidgetMap.refreshData += 1;
+              WidgetMap.refreshData += 1;
               //  WidgetMap.isFilterApplied=false;
             }, function (err) {
               console.error('distance err', err);

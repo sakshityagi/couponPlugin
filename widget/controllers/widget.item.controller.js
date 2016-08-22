@@ -20,16 +20,33 @@
           // Do nothing
         });
 
+        var breadCrumbFlag = true;
+
+        Buildfire.history.get('pluginBreadcrumbsOnly', function (err, result) {
+          if(result && result.length) {
+            result.forEach(function(breadCrumb) {
+              if(breadCrumb.label == 'Item') {
+                breadCrumbFlag = false;
+              }
+            });
+          }
+          if(breadCrumbFlag) {
+            Buildfire.history.push('Item', { elementToShow: 'Item' });
+          }
+        });
+
+
+
         WidgetItem.getItemDetails = function () {
           Buildfire.spinner.show();
           var success = function (result) {
-              Buildfire.spinner.hide();
-              WidgetItem.item = result;
-            }
+            Buildfire.spinner.hide();
+            WidgetItem.item = result;
+          }
             , error = function (err) {
-              Buildfire.spinner.hide();
-              console.error('Error In Fetching Event', err);
-            };
+            Buildfire.spinner.hide();
+            console.error('Error In Fetching Event', err);
+          };
 
           if (currentView.params && currentView.params.itemId) {
             DataStore.getById(currentView.params.itemId, TAG_NAMES.COUPON_ITEMS).then(success, error);
@@ -293,37 +310,37 @@
         var init = function () {
           Buildfire.spinner.show();
           var success = function (result) {
-              Buildfire.spinner.hide();
-              WidgetItem.data = result.data;
-              if (!WidgetItem.data.design)
-                WidgetItem.data.design = {};
-              WidgetItem.getItemDetails();
-              var getDevice = function (error, data) {
-                if (data)
-                  WidgetItem.device = data.device;
-                else
-                  console.log("Error while getting the device context data", error)
-              };
-              buildfire.getContext(getDevice);
-              if(WidgetItem.currentLoggedInUser){
-                WidgetItem.getSavedItems();
-                WidgetItem.getRedeemedCoupons();
-              }
-            else {
-                buildfire.auth.getCurrentUser(function (err, user) {
-                  if (user) {
-                    WidgetItem.currentLoggedInUser = user;
-                    $scope.$apply();
-                    WidgetItem.getSavedItems();
-                    WidgetItem.getRedeemedCoupons();
-                  }
-                });
-              }
-            }
-            , error = function (err) {
-              Buildfire.spinner.hide();
-              console.error('Error while getting data', err);
+            Buildfire.spinner.hide();
+            WidgetItem.data = result.data;
+            if (!WidgetItem.data.design)
+              WidgetItem.data.design = {};
+            WidgetItem.getItemDetails();
+            var getDevice = function (error, data) {
+              if (data)
+                WidgetItem.device = data.device;
+              else
+                console.log("Error while getting the device context data", error)
             };
+            buildfire.getContext(getDevice);
+            if(WidgetItem.currentLoggedInUser){
+              WidgetItem.getSavedItems();
+              WidgetItem.getRedeemedCoupons();
+            }
+            else {
+              buildfire.auth.getCurrentUser(function (err, user) {
+                if (user) {
+                  WidgetItem.currentLoggedInUser = user;
+                  $scope.$apply();
+                  WidgetItem.getSavedItems();
+                  WidgetItem.getRedeemedCoupons();
+                }
+              });
+            }
+          }
+            , error = function (err) {
+            Buildfire.spinner.hide();
+            console.error('Error while getting data', err);
+          };
           DataStore.get(TAG_NAMES.COUPON_INFO).then(success, error);
         };
 
